@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -312,7 +313,7 @@ func (p *Packager) validate() (err error) {
 	if !util.Exists(p.icon) {
 		return errors.New("Missing application icon at \"" + p.icon + "\"")
 	}
-	if strings.ToLower(filepath.Ext(p.icon)) != ".png" {
+	if !slices.Contains([]string{".png", ".ico"}, strings.ToLower(filepath.Ext(p.icon))) {
 		tmp, err := p.normaliseIcon(p.icon)
 		if err != nil {
 			return err

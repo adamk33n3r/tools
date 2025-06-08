@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"image"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,10 +31,6 @@ func (p *Packager) packageWindows(tags []string) error {
 		return fmt.Errorf("failed to open source image: %w", err)
 	}
 	defer img.Close()
-	srcImg, _, err := image.Decode(img)
-	if err != nil {
-		return fmt.Errorf("failed to decode source image: %w", err)
-	}
 
 	icoPath := filepath.Join(exePath, "FyneApp.ico")
 	file, err := os.Create(icoPath)
@@ -41,9 +38,20 @@ func (p *Packager) packageWindows(tags []string) error {
 		return fmt.Errorf("failed to open image file: %w", err)
 	}
 
-	err = ico.Encode(file, srcImg)
-	if err != nil {
-		return fmt.Errorf("failed to encode icon: %w", err)
+	if strings.EqualFold(filepath.Ext(p.icon), ".ico") {
+		_, err := io.Copy(file, img)
+		if err != nil {
+			return fmt.Errorf("failed to copy icon: %w", err)
+		}
+	} else {
+		srcImg, _, err := image.Decode(img)
+		if err != nil {
+			return fmt.Errorf("failed to decode source image: %w", err)
+		}
+		err = ico.Encode(file, srcImg)
+		if err != nil {
+			return fmt.Errorf("failed to encode icon: %w", err)
+		}
 	}
 
 	err = file.Close()
